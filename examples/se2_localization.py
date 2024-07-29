@@ -106,7 +106,7 @@ from manifpy import SE2, SE2Tangent
 
 import numpy as np
 from numpy.linalg import inv
-
+import matplotlib.pyplot as plt
 
 Vector = np.array
 
@@ -122,7 +122,7 @@ def Jacobian():
 if __name__ == '__main__':
 
     # START CONFIGURATION
-
+    NUMBER_OF_STEPS = 100
     NUMBER_OF_LMKS_TO_MEASURE = 3
 
     # Define the robot pose element and its covariance
@@ -169,8 +169,13 @@ if __name__ == '__main__':
 
     # START TEMPORAL LOOP
 
+    # Data buffer
+    Xs_simulation = []
+    Xs_estimated = []
+    Xs_unfiltered = []
+
     # Make 10 steps. Measure up to three landmarks each time.
-    for t in range(10):
+    for t in range(NUMBER_OF_STEPS):
         # I. Simulation
 
         # simulate noise
@@ -244,3 +249,21 @@ if __name__ == '__main__':
         print('X unfilterd : ', X_unfiltered.log().coeffs().transpose())
         print('-------------------------------------------------------')
         # END DEBUG
+
+        # Store data for later plotting
+        Xs_simulation.append(X_simulation.log().coeffs().transpose())
+        Xs_estimated.append(X.log().coeffs().transpose())
+        Xs_unfiltered.append(X_unfiltered.log().coeffs().transpose())
+    
+    # Visualize the results
+    plt.figure()
+    t = np.arange(NUMBER_OF_STEPS) / 30
+    plt.plot(t, np.array(Xs_simulation)[:, 0], label='Simulated')
+    plt.plot(t, np.array(Xs_estimated)[:, 0], label='Estimated')
+    plt.plot(t, np.array(Xs_unfiltered)[:, 0], label='Unfiltered')
+    plt.plot(t, np.array(Xs_simulation)[:, 0] - np.array(Xs_estimated)[:, 0], label='Tracking Error')
+    plt.xlabel('Time [s]')
+    plt.ylabel('X [m]')
+    plt.legend()
+    plt.show()
+    
